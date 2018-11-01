@@ -23,6 +23,7 @@
         mapping (address => uint) participant_map ;
         mapping (address => uint) participant_current_balanace ;
         mapping (uint => uint) question_answer_map ;
+        mapping (uint => uint) question_correctly_answered; 
         mapping( address => uint )participant_withdraw_money;
         mapping( address => uint )participant_answered_questions;
         
@@ -123,7 +124,8 @@
             no_of_questions = question_number.length;     
             for(uint i=0;i<question_number.length;i++)
             {
-                question_answer_map[question_number[i]] = correct_answer[i];
+                question_answer_map[i+1] = correct_answer[i];
+                question_correctly_answered[i+1] = 0;
             }
         }
    
@@ -157,6 +159,7 @@
             {
                 uint bit = 2**(qno-1);
                 participant_answered_questions[msg.sender] = (participant_answered_questions[msg.sender] | bit);
+                question_correctly_answered[qno] += 1;
             }
      
         }
@@ -190,6 +193,13 @@
          returns (uint256)
         {
             return address(this).balance;
+        }
+        function get_answered_questions() public view returns(uint){
+            return participant_answered_questions[msg.sender];
+        }
+
+        function get_no_of_correct_attempts(uint qno) public view returns(uint){
+            return question_correctly_answered[qno];
         }
         // function temp(uint qno) public 
         // {

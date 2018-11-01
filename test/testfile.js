@@ -67,6 +67,77 @@ let contractInstance
       assert.equal(new_balance.c[0],prev_balance.c[0]+10, 'Organizer didnt receive the participation fees')
     })
     it('Check if participant can answer a question', async() => {
+      var check_flag = 0
+      try{
+        await contractInstance.play_game_question_answer(1,1,{from: accounts[1]})
+        check_flag = 1;
+      }
+      catch(err){
+        console.log(err)
+      }
+      assert.equal(check_flag,1, 'participant could not answer question')
+    })
+    it('Check if non participant cannot answer a question', async() => {
+      var check_flag = 0;
+      try{
+        await contractInstance.play_game_question_answer(1,1,{from: accounts[6]})
+        check_flag = 1;
+      }
+      catch(err){
+        // console.log(err)
+      }
+      assert.equal(check_flag,0, 'Non participant answered a question')
+    })
+    it('Check if organizer cannot answer a question', async() => {
+      var check_flag = 0;
+      try{
+        await contractInstance.play_game_question_answer(1,1,{from: accounts[0]})
+        check_flag = 1;
+      }
+      catch(err){
+        // console.log(err)
+      }
+      assert.equal(check_flag,0, 'Organizer answered a question')
+    })
+
+    it('Check if answered question list of participant is updated on correctly answering', async() => {
+      try{
+        await contractInstance.play_game_question_answer(1,1,{from: accounts[1]})
+      }
+      catch(err){
+        // console.log(err)
+      }
+      var questions_answered = await contractInstance.get_answered_questions({from: accounts[1]})
+      var bit = 1;
+      var temp = questions_answered.c[0] & bit;
+      assert.equal(temp,bit, 'Answered questions list not updated')
+    })
+    it('Check if answered question list of participant is updated on correctly answering', async() => {
+      try{
+        await contractInstance.play_game_question_answer(3,3,{from: accounts[1]})
+      }
+      catch(err){
+        // console.log(err)
+      }
+      var questions_answered = await contractInstance.get_answered_questions({from: accounts[1]})
+      var bit = 4;
+      var temp = questions_answered.c[0] & bit;
+      assert.equal(temp,bit, 'Answered questions list not updated')
+    })
+    it('Check if answered question list of participant is not updated on incorrectly answering', async() => {
+      try{
+        await contractInstance.play_game_question_answer(4,2,{from: accounts[1]})
+      }
+      catch(err){
+        // console.log(err)
+      }
+      var questions_answered = await contractInstance.get_answered_questions({from: accounts[1]})
+      var bit = 8;
+      var temp = questions_answered.c[0] & bit;
+      assert.equal(temp,0, 'Answered questions list updated')
+    })
+    it('Check if same question is not answered twice', async() => {
+      var check_flag = 0;
       try{
         await contractInstance.play_game_question_answer(1,1,{from: accounts[1]})
         check_flag = 1;
@@ -74,200 +145,28 @@ let contractInstance
       catch(err){
         // console.log(err)
       }
-      assert.equal(check_flag,1, 'Non participant answered a question')
+      assert.equal(check_flag,0, 'Same question answered twice')
     })
-    // it('Check if non participant cannot answer a question', async() => {
-    //   var check_flag = 0;
-    //   try{
-    //     await contractInstance.play_game_question_answer(1,1,{from: accounts[5]})
-    //     check_flag = 1;
-    //   }
-    //   catch(err){
-    //     // console.log(err)
-    //   }
-    //   assert.equal(check_flag,0, 'Non participant answered a question')
-    // })
-    // it('Check if organizer cannot answer a question', async() => {
-    //   var check_flag = 0;
-    //   try{
-    //     await contractInstance.play_game_question_answer(1,1,{from: accounts[0]})
-    //     check_flag = 1;
-    //   }
-    //   catch(err){
-    //     // console.log(err)
-    //   }
-    //   assert.equal(check_flag,0, 'Organizer answered a question')
-    // })
-    // it('Check balance update on correctly answering a question', async() => {
-    //   var prev_balance = await contractInstance.show_balance({from: accounts[1]})
-    //   var reward = await contractInstance.show_reward()
-    //   try{
-    //     await contractInstance.play_game_question_answer(1,1,{from: accounts[1]})
-    //   }
-    //   catch(err){
-    //     // console.log(err)
-    //   }
-    //   var new_balance = await contractInstance.show_balance({from: accounts[1]})      
-    //   assert.equal(prev_balance.c[0]+reward.c[0],new_balance.c[0], 'Balance not updated')
-    // })
-    // it('Check balance update on incorrectly answering a question', async() => {
-    //   var prev_balance = await contractInstance.show_balance({from: accounts[1]})
-    //   try{
-    //     await contractInstance.play_game_question_answer(1,2,{from: accounts[1]})
-    //   }
-    //   catch(err){
-    //     // console.log(err)
-    //   }
-    //   var new_balance = await contractInstance.show_balance({from: accounts[1]})      
-    //   assert.equal(prev_balance.c[0],new_balance.c[0], 'Balance updated on incorrectly answering')
-    // })
-    // var arr = [0,0,0,0,0,7,6,5,4];
-    // // for(i = 5; i < 9; i+=1){
-    //   // const z =  i;
-    //   it('Check if bidder is not getting registered when insufficient amount is paid', async() => {     
-    //     var prevcnt = await contractInstance.getbidder()
-    //     try{
-    //       await contractInstance.register_bidder([19,19],[1,2], 30, 9, {from: accounts[6], value: web3.toWei(0.000000000000000001,'ether')})
-    //     }
-    //     catch(err){
-
-    //     }
-    //     var newcnt = await contractInstance.getbidder()
-    //     assert.equal(prevcnt.c[0], newcnt.c[0], 'Bidder is not registered')
-    //     })
-    //   it('Check if bidder is getting registered and contract balance is updated', async() => {     
-    //     var prevcnt = await contractInstance.getbidder()
-    //     await contractInstance.register_bidder([19,19],[1,2], 30, 11, {from: accounts[5], value: web3.toWei(0.000000000000000006,'ether')})
-    //     var newcnt = await contractInstance.getbidder()
-    //     var temp = await contractInstance.get_contract_balance();
-    //     assert.equal(prevcnt.c[0] + 1, newcnt.c[0], 'Bidder is not registered')
-    //     assert.equal(temp.c[0], 6, 'Balance not updated')
-    //     })
-    //   it('Check if bidder is getting registered', async() => {     
-    //     var prevcnt = await contractInstance.getbidder()
-    //     await contractInstance.register_bidder([19,19],[1,2], 30, 9, {from: accounts[6], value: web3.toWei(0.000000000000000002,'ether')})
-    //     var newcnt = await contractInstance.getbidder()
-    //     assert.equal(prevcnt.c[0] + 1, newcnt.c[0], 'Bidder is not registered')
-    //     })
-    //   it('Check if bidder is getting registered', async() => {     
-    //     var prevcnt = await contractInstance.getbidder()
-    //     await contractInstance.register_bidder([19,19],[4,3], 30, 10, {from: accounts[7], value: web3.toWei(0.000000000000000004,'ether')})
-    //     var newcnt = await contractInstance.getbidder()
-    //     assert.equal(prevcnt.c[0] + 1, newcnt.c[0], 'Bidder is not registered')
-    //     })
-    //   it('Check if bidder is getting registered', async() => {     
-    //     var prevcnt = await contractInstance.getbidder()
-    //     await contractInstance.register_bidder([19,19],[1,2], 30, 12, {from: accounts[8], value: web3.toWei(0.000000000000000008,'ether')})
-    //     var newcnt = await contractInstance.getbidder()
-    //     assert.equal(prevcnt.c[0] + 1, newcnt.c[0], 'Bidder is not registered')
-    //     })
-    // // }
-
-    // it('Check if notary not registered on moderator', async() => {     
-    //   var prevcnt = await contractInstance.getnotary()
-    //   try {
-    //     await contractInstance.register_notary({from: accounts[0]});
-    //   }
-    //   catch(err){
-    //   }
-    //   var newcnt = await contractInstance.getnotary()
-    //   assert.equal(prevcnt.c[0] , newcnt.c[0], 'Bidder is not registered')
-    // })
-
-    // it('Check if bidder not registered on moderator', async() => {     
-    //   var prevcnt = await contractInstance.getbidder()
-    //   try {
-    //     await contractInstance.register_bidder({from: accounts[0]});
-    //   }
-    //   catch(err){
-    //   }
-    //   var newcnt = await contractInstance.getbidder()
-    //   assert.equal(prevcnt.c[0] , newcnt.c[0], 'Bidder is not registered')
-    // })
-
-    // it('Check if bidder not registered on notary', async() => {     
-    //   var prevcnt = await contractInstance.getbidder()
-    //   try {
-    //     await contractInstance.register_bidder({from: accounts[2]});
-    //   }
-    //   catch(err){
-    //   }
-    //   var newcnt = await contractInstance.getbidder()
-    //   assert.equal(prevcnt.c[0] , newcnt.c[0], 'Bidder is not registered')
-    // })
-
-    // it('Check if notary not registered on bidder', async() => {     
-    //   var prevcnt = await contractInstance.getnotary()
-    //   try {
-    //     await contractInstance.register_notary({from: accounts[5]});
-    //   }
-    //   catch(err){
-    //   }
-    //   var newcnt = await contractInstance.getnotary()
-    //   assert.equal(prevcnt.c[0] , newcnt.c[0], 'Bidder is not registered')
-    // })
-
-    // it('Only moderator can call winner', async() => {
-    //   try{
-    //     await contractInstance.declare_winners({from: accounts[0]});
-    //     await contractInstance.allot_payments({from: accounts[0]});
-    //     // console.log(temp);
-    //     console.log("Emitted");     
-    //   }
-    //   catch(err){
-    //     console.log(err);
-    //   }
-    // })
-
-    // it('Declare winner', async() => {
-    //   // var result=contractInstance.declare_winners({from: accounts[0]});
-    // //  var arr= new Array();
-    // //  for(i=0;i<4;i++){
-    //   var temp=await contractInstance.get_winner_w1();
-    //   console.log(temp);
-    //   assert.equal(temp.c[0] , 12, 'Bidder is not registered')
-      
-    // //  }
-    // })
-    // it('Winners Pay for bidded items', async() => {
-    //   var temp = await contractInstance.get_contract_balance();
-    //   await contractInstance.get_items({from: accounts[8], value: web3.toWei(0.000000000000000002,'ether')});
-    //   var temp2 = await contractInstance.get_contract_balance();
-    //   assert.equal(temp.c[0], temp2.c[0]-6, 'Balance not deducted');     
-    // //  }
-    // })
-    // it('The losing bidder cannot pay', async() => {
-    //   var temp = await contractInstance.get_contract_balance();
-    //   try{
-    //   await contractInstance.get_items({from: accounts[5], value: web3.toWei(0.000000000000000010,'ether')});
-    //   }
-    //   catch(err){
-    //   }     
-    //   var temp2 = await contractInstance.get_contract_balance();
-    //   assert.equal(temp.c[0], temp2.c[0], 'Balance not deducted');     
-
-    // //  }
-    // })
-    // // it('The losing bidder withdraws', async() => {
-    // //   var temp = await web3.eth.getBalance(accounts[5]);
-    // //   console.log(web3.toWei(temp.c[0]));
-    // //   try{
-    // //   await contractInstance.withdraw_losing_bid({from: accounts[5]});
-    // //   }
-    // //   catch(err){
-    // //   }     
-    // //   var temp2 = await web3.eth.getBalance(accounts[5]);
-    // //   console.log(web3.toWei(temp2.c[0]));
-    // //   // var temp2 = await contractInstance.get_balance({from: accounts[5]});
-    // //   // console.log(temp.c[0],temp2.c[0])
-    // //   // assert.equal(temp.c[0] + 6, temp2.c[0], 'Balance not deducted');     
-    // // //  }
-    // // })
-    // // it('Winners Pay for bidded items', async() => {
-    // //   var temp = await contractInstance.get_contract_balance();
-    // //   await contractInstance.check_intersection(1,2);
-    // //   var temp2 = await contractInstance.get_contract_balance();
-    // //   // assert.equal(temp.c[0], temp2.c[0]-10, 'Balance not deducted');     
-    // // //  }
-    // // })
+    it('Check if no of correct attempts of a question are updated on a correct answer', async() => {
+      var correct_attempts = await contractInstance.get_no_of_correct_attempts(1);
+      try{
+        await contractInstance.play_game_question_answer(1,1,{from: accounts[2]})
+      }
+      catch(err){
+        // console.log(err)
+      }
+      var updated_correct_attempts = await contractInstance.get_no_of_correct_attempts(1);
+      assert.equal(updated_correct_attempts.c[0],correct_attempts.c[0]+1, 'No of correct attempts of the question not updated')
+    })
+    it('Check if no of correct attempts of a question are not updated on an incorrect answer', async() => {
+      var correct_attempts = await contractInstance.get_no_of_correct_attempts(1);
+      try{
+        await contractInstance.play_game_question_answer(2,3,{from: accounts[2]})
+      }
+      catch(err){
+        // console.log(err)
+      }
+      var updated_correct_attempts = await contractInstance.get_no_of_correct_attempts(1);
+      assert.equal(updated_correct_attempts.c[0],correct_attempts.c[0], 'No of correct attempts of the question updated')
+    })
 })
